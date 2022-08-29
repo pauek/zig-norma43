@@ -1,7 +1,14 @@
 const std = @import("std");
+const util = @import("./util.zig");
+const cc = @import("./cabecera_cuenta.zig");
 
-pub fn parseRegister(buf: [82]u8) !void {
-    try std.fmt.format(std.io.getStdOut().writer(), "Line: {x}\n", .{ std.fmt.fmtSliceHexLower(&buf) });
+pub fn parseRegister(line: *const [82]u8) !void {
+    if (util.code(line) == 11) {
+        var c = cc.parseCabeceraCuenta(line);
+        c.print();
+    } else {
+        util.print("Line: {x}\n", .{std.fmt.fmtSliceHexLower(line)});
+    }
 }
 
 pub fn main() anyerror!void {
@@ -14,8 +21,8 @@ pub fn main() anyerror!void {
 
     var nread = try in_stream.read(&buf);
     while (nread > 0) {
-        if (nread == 82) {
-            try parseRegister(buf);
+        if (nread == 82) { 
+            try parseRegister(&buf);
         }
         nread = try in_stream.read(&buf);
     }
