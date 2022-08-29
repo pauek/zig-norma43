@@ -32,7 +32,7 @@ pub fn parseCabeceraCuenta(line: *const [82]u8) CabeceraCuenta {
         .fecha_inicial = util.parseFecha(line[20..26]),
         .fecha_final = util.parseFecha(line[26..32]),
         .debe_haber = line[32] - 48,
-        .saldo = util.parseSaldo(line[33..47]),
+        .saldo = util.parseImporte(line[33..47]),
         .divisa = util.parseDivisa(line[47..50]),
         .modalidad = line[50] - 48, // Quito ASCII '0',
         .nombre_abrev = std.mem.zeroes([26]u8),

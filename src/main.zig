@@ -1,11 +1,16 @@
 const std = @import("std");
 const util = @import("./util.zig");
 const cc = @import("./cabecera_cuenta.zig");
+const mv = @import("./movimiento.zig");
 
 pub fn parseRegister(line: *const [82]u8) !void {
-    if (util.code(line) == 11) {
+    var code = util.code(line);
+    if (code == 11) {
         var c = cc.parseCabeceraCuenta(line);
         c.print();
+    } else if (code == 22) {
+        var m = mv.parseMovimiento(line);
+        m.print();
     } else {
         util.print("Line: {x}\n", .{std.fmt.fmtSliceHexLower(line)});
     }

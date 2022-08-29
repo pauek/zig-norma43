@@ -1,4 +1,3 @@
-
 const std = @import("std");
 const stdout = std.io.getStdOut().writer();
 
@@ -19,7 +18,7 @@ pub fn parseFecha(f: *const [6]u8) Fecha {
     return fecha;
 }
 
-pub fn parseSaldo(s: *const [14]u8) f64 {
+pub fn parseImporte(s: []const u8) f64 {
     var n = std.fmt.parseInt(usize, s, 10) catch 0;
     return @intToFloat(f64, n) / 100.0;
 }
@@ -38,3 +37,16 @@ pub const Fecha = struct {
     mes: u8,
     anyo: usize,
 };
+
+pub const DebeHaber = enum {
+    deudor,
+    acreedor,
+};
+
+pub fn debeHaberFromU8(x: u8) DebeHaber {
+    if (x - 48 == 1) {
+        return DebeHaber.deudor;
+    } else if (x - 48 == 2) {
+        return DebeHaber.acreedor;
+    } else unreachable;
+}
