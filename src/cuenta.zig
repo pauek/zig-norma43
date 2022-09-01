@@ -50,8 +50,8 @@ pub const Cuenta = struct {
         pr("Modalidad: {d}\n", .{self.modalidad});
         pr("Nombre:    {s}\n", .{self.nombre_abrev});
 
-        var fini: [10:0]u8 = std.mem.zeroes([10:0]u8);
-        var ffin: [10:0]u8 = std.mem.zeroes([10:0]u8);
+        var fini: [10:0]u8 = undefined;
+        var ffin: [10:0]u8 = undefined;
         self.fecha_inicial.printTo(&fini);
         self.fecha_final.printTo(&ffin);
         pr("Fecha Inicial: {s}\n", .{fini});
@@ -75,7 +75,7 @@ pub const Cuenta = struct {
         self.saldo = util.signoFromDebeHaberU8(line[32]) * util.parseImporte(line[33..47]);
         self.divisa = util.parseDivisa(line[47..50]);
         self.modalidad = line[50] - 48; // Quito ASCII '0',
-        self.nombre_abrev = std.mem.zeroes([26]u8);
+        self.nombre_abrev = undefined;
         self.movimientos = std.ArrayList(Movimiento).init(allocator);
         std.mem.copy(u8, &self.nombre_abrev, line[51..77]);
     }

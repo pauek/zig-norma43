@@ -16,8 +16,8 @@ pub const Movimiento = struct {
     pub fn print(self: *const Movimiento) void {
         pr("---- Movimiento ----------------------------------------\n", .{});
         pr("Oficina Origen: {s}\n", .{self.oficina_origen});
-        var fecha1: [10:0]u8 = std.mem.zeroes([10:0]u8);
-        var fecha2: [10:0]u8 = std.mem.zeroes([10:0]u8);
+        var fecha1: [10:0]u8 = undefined;
+        var fecha2: [10:0]u8 = undefined;
         self.fecha_operacion.printTo(&fecha1);
         self.fecha_valor.printTo(&fecha2);
         pr("Fecha Operación -> Valor: {s} -> {s}\n", .{ fecha1, fecha2 });
@@ -30,7 +30,7 @@ pub const Movimiento = struct {
     }
 
     pub fn printOneLine(self: *const Movimiento) void {
-        var fecha: [10:0]u8 = std.mem.zeroes([10:0]u8);
+        var fecha: [10:0]u8 = undefined;
         self.fecha_valor.printTo(&fecha);
         pr("{s}.{s}.{s} {s} {d: >9.2}  {s}{s}\n", .{
             self.oficina_origen,
@@ -50,9 +50,9 @@ pub const Movimiento = struct {
         self.concepto_comun = [2]u8{ line[22], line[23] };
         self.concepto_propio = [3]u8{ line[24], line[25], line[26] };
         self.importe = util.signoFromDebeHaberU8(line[27]) * util.parseImporte(line[28..42]);
-        self.dni = std.mem.zeroes([10]u8);
-        self.ref1 = std.mem.zeroes([12]u8);
-        self.ref2 = std.mem.zeroes([16]u8);
+        self.dni = undefined;
+        self.ref1 = undefined;
+        self.ref2 = undefined;
         std.mem.copy(u8, &self.dni, line[42..52]);
         std.mem.copy(u8, &self.ref1, line[52..64]);
         std.mem.copy(u8, &self.ref2, line[64..80]);
