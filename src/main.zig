@@ -27,19 +27,18 @@ pub const DatosBancarios = struct {
     }
 };
 
-
 pub fn main() anyerror!void {
     var file = try std.fs.cwd().openFile("iber-caja-2022.aeb43", .{});
     defer file.close();
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    
-    var datos: DatosBancarios = .{ 
+
+    var datos: DatosBancarios = .{
         .cuentas = std.ArrayList(Cuenta).init(allocator),
         .cuentaActual = null,
-    }; 
-    
+    };
+
     var buf_reader = std.io.bufferedReader(file.reader());
     var in_stream = buf_reader.reader();
     var buf: [82]u8 = undefined;
@@ -48,12 +47,10 @@ pub fn main() anyerror!void {
         var nread = try in_stream.read(&buf);
         if (nread == 0) {
             break;
-        }
-        if (nread == 82) {
-            try datos.parseRegister(&buf, allocator);
-        } else {
+        } else if (nread != 82) {
             unreachable;
         }
+        try datos.parseRegister(&buf, allocator);
     }
 
     for (datos.cuentas.items) |cuenta| {

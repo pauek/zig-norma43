@@ -3,6 +3,14 @@ const util = @import("./util.zig");
 const Movimiento = @import("./movimiento.zig").Movimiento;
 const pr = util.print;
 
+fn digito(n: u8) u8 {
+    return '0' + switch (n) {
+        11 => 0,
+        10 => 1,
+        else => n,
+    };
+}
+
 pub const Cuenta = struct {
     entidad: [4]u8,
     oficina: [4]u8,
@@ -15,12 +23,33 @@ pub const Cuenta = struct {
     nombre_abrev: [26]u8,
     movimientos: std.ArrayList(Movimiento),
 
+    pub fn digitosDeControl(self: *const Cuenta) [2]u8 {
+        // https://www.geogebra.org/m/q7RhU98P
+        const pesos = [10]usize{ 1, 2, 4, 8, 5, 10, 9, 7, 3, 6 };
+        var suma1: usize = 0;
+        for (self.entidad) |e, i| {
+            suma1 += (e - '0') * pesos[2 + i];
+        }
+        for (self.oficina) |o, i| {
+            suma1 += (o - '0') * pesos[6 + i];
+        }
+        var suma2: usize = 0;
+        for (self.numero) |n, i| {
+            suma2 += (n - '0') * pesos[i];
+        }
+        var mod1: u8 = @intCast(u8, suma1 % 11);
+        var mod2: u8 = @intCast(u8, suma2 % 11);
+        return .{ digito(11 - mod1), digito(11 - mod2) };
+    }
+
     pub fn print(self: *const Cuenta) void {
         pr("----- Cuenta ----------------------------------------\n", .{});
-        pr("Cuenta:    {s}-{s}-__-{s}\n", .{ self.entidad, self.oficina, self.numero });
+        var dc = self.digitosDeControl();
+        pr("Cuenta:    {s}-{s}-{s}-{s}\n", .{ self.entidad, self.oficina, dc, self.numero });
         pr("Saldo:     {d}{s}\n", .{ self.saldo, self.divisa });
         pr("Modalidad: {d}\n", .{self.modalidad});
-        pr("Nombre:    {s}\n\n", .{self.nombre_abrev});
+        pr("Nombre:    {s}\n", .{self.nombre_abrev});
+
         var fini: [10:0]u8 = std.mem.zeroes([10:0]u8);
         var ffin: [10:0]u8 = std.mem.zeroes([10:0]u8);
         self.fecha_inicial.printTo(&fini);
@@ -31,6 +60,10 @@ pub const Cuenta = struct {
         for (self.movimientos.items) |mov| {
             mov.printOneLine();
         }
+    }
+
+    pub fn printJson(self: *const Cuenta) void {
+        pr("{\"cuenta\": \"{s}-{s}-__-{s}\"}", .{ self.entidad, self.oficina, self.numero });
     }
 
     pub fn parse(self: *Cuenta, line: *const [82]u8, allocator: std.mem.Allocator) void {
