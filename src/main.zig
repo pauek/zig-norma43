@@ -7,7 +7,13 @@ pub fn main() anyerror!void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    var extracto = ExtractoBancario.init(allocator);
-    try extracto.readFrom("iber-caja-2022.aeb43");
-    try extracto.dump();
+    var args = try std.process.argsAlloc(allocator);
+    for (args) |filename, index| {
+        if (index > 0) {
+            std.debug.print("{s}:\n", .{ filename });
+            var extracto = ExtractoBancario.init(allocator);
+            try extracto.readFrom(filename);
+            try extracto.dump();
+        }
+    }
 }
