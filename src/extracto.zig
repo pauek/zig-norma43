@@ -1,7 +1,8 @@
 const std = @import("std");
 const util = @import("./util.zig");
-const Movimiento = @import("./movimiento.zig").Movimiento;
 const Cuenta = @import("./cuenta.zig").Cuenta;
+const Movimiento = @import("./movimiento.zig").Movimiento;
+const Complemento = @import("./complemento.zig").Complemento;
 
 pub const ExtractoBancario = struct {
     const Self = @This();
@@ -9,12 +10,14 @@ pub const ExtractoBancario = struct {
     allocator: std.mem.Allocator,
     cuentas: std.ArrayList(Cuenta),
     cuentaActual: ?*Cuenta,
+    movimientoActual: ?*Movimiento,
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
             .allocator = allocator,
             .cuentas = std.ArrayList(Cuenta).init(allocator),
             .cuentaActual = null,
+            .movimientoActual = null,
         };
     }
 
@@ -43,16 +46,22 @@ pub const ExtractoBancario = struct {
             var nueva: *Cuenta = try self.cuentas.addOne();
             nueva.parse(line, allocator);
             self.cuentaActual = nueva;
+            self.movimientoActual = null;
         } else if (code == 22) {
-            if (self.cuentaActual) |actual| {
-                var mov: *Movimiento = try actual.movimientos.addOne();
-                mov.parseMovimiento(line);
-                // mov.printOneLine();
+            if (self.cuentaActual) |cuenta| {
+                var mov: *Movimiento = try cuenta.movimientos.addOne();
+                mov.parse(line, allocator);
+                self.movimientoActual = mov;
             } else {
-                util.print("No hay cuenta actual!\n", .{});
+                @panic("No hay cuenta actual!");
             }
-        } else {
-            // util.print("Line: {x}\n", .{std.fmt.fmtSliceHexLower(line)});
+        } else if (code == 23) {
+            if (self.movimientoActual) |movimiento| {
+                var compl: *Complemento = try movimiento.complementos.addOne();
+                compl.parse(line);
+            } else {
+                @panic("No hay movimiento actual!");
+            }
         }
     }
 

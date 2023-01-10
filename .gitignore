@@ -2,3 +2,4 @@ zig-cache
 zig-out
 out
 *.aeb43
+.DS_Store

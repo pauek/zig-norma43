@@ -3,7 +3,7 @@ const util = @import("./util.zig");
 const Movimiento = @import("./movimiento.zig").Movimiento;
 const pr = util.print;
 
-fn digito(n: u8) u8 {
+fn digit(n: u8) u8 {
     return '0' + switch (n) {
         11 => 0,
         10 => 1,
@@ -23,7 +23,21 @@ pub const Cuenta = struct {
     nombre_abrev: [26]u8,
     movimientos: std.ArrayList(Movimiento),
 
-    pub fn digitosDeControl(self: *const Cuenta) [2]u8 {
+    pub fn parse(self: *Cuenta, line: *const [82]u8, allocator: std.mem.Allocator) void {
+        self.entidad = [4]u8{ line[2], line[3], line[4], line[5] };
+        self.oficina = [4]u8{ line[6], line[7], line[8], line[9] };
+        self.numero = [10]u8{ line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19] }; // line[10..20],
+        self.fecha_inicial = util.parseFecha(line[20..26]);
+        self.fecha_final = util.parseFecha(line[26..32]);
+        self.saldo = util.signoFromDebeHaberU8(line[32]) * util.parseImporte(line[33..47]);
+        self.divisa = util.parseDivisa(line[47..50]);
+        self.modalidad = line[50] - 48; // Quito ASCII '0',
+        self.nombre_abrev = undefined;
+        self.movimientos = std.ArrayList(Movimiento).init(allocator);
+        std.mem.copy(u8, &self.nombre_abrev, line[51..77]);
+    }
+
+    pub fn controlDigits(self: *const Cuenta) [2]u8 {
         // https://www.geogebra.org/m/q7RhU98P
         const pesos = [10]usize{ 1, 2, 4, 8, 5, 10, 9, 7, 3, 6 };
         var suma1: usize = 0;
@@ -39,12 +53,12 @@ pub const Cuenta = struct {
         }
         var mod1: u8 = @intCast(u8, suma1 % 11);
         var mod2: u8 = @intCast(u8, suma2 % 11);
-        return .{ digito(11 - mod1), digito(11 - mod2) };
+        return .{ digit(11 - mod1), digit(11 - mod2) };
     }
 
     pub fn print(self: *const Cuenta) void {
         pr("----- Cuenta ----------------------------------------\n", .{});
-        var dc = self.digitosDeControl();
+        var dc = self.controlDigits();
         pr("Cuenta:    {s}-{s}-{s}-{s}\n", .{ self.entidad, self.oficina, dc, self.numero });
         pr("Saldo:     {d}{s}\n", .{ self.saldo, self.divisa });
         pr("Modalidad: {d}\n", .{self.modalidad});
@@ -64,19 +78,5 @@ pub const Cuenta = struct {
 
     pub fn printJson(self: *const Cuenta) void {
         pr("{\"cuenta\": \"{s}-{s}-__-{s}\"}", .{ self.entidad, self.oficina, self.numero });
-    }
-
-    pub fn parse(self: *Cuenta, line: *const [82]u8, allocator: std.mem.Allocator) void {
-        self.entidad = [4]u8{ line[2], line[3], line[4], line[5] };
-        self.oficina = [4]u8{ line[6], line[7], line[8], line[9] };
-        self.numero = [10]u8{ line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19] }; // line[10..20],
-        self.fecha_inicial = util.parseFecha(line[20..26]);
-        self.fecha_final = util.parseFecha(line[26..32]);
-        self.saldo = util.signoFromDebeHaberU8(line[32]) * util.parseImporte(line[33..47]);
-        self.divisa = util.parseDivisa(line[47..50]);
-        self.modalidad = line[50] - 48; // Quito ASCII '0',
-        self.nombre_abrev = undefined;
-        self.movimientos = std.ArrayList(Movimiento).init(allocator);
-        std.mem.copy(u8, &self.nombre_abrev, line[51..77]);
     }
 };

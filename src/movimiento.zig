@@ -1,8 +1,11 @@
 const std = @import("std");
 const util = @import("./util.zig");
 const pr = util.print;
+const Complemento = @import("./complemento.zig").Complemento;
 
 pub const Movimiento = struct {
+    const Self = @This();
+
     oficina_origen: [4]u8,
     fecha_operacion: util.Fecha,
     fecha_valor: util.Fecha,
@@ -12,6 +15,7 @@ pub const Movimiento = struct {
     dni: [10]u8,
     ref1: [12]u8,
     ref2: [16]u8,
+    complementos: std.ArrayList(Complemento),
 
     pub fn print(self: *const Movimiento) void {
         pr("---- Movimiento ----------------------------------------\n", .{});
@@ -26,10 +30,13 @@ pub const Movimiento = struct {
         pr("Importe: {d: >15.2}\n", .{self.importe});
         pr("DNI: {s}\n", .{self.dni});
         pr("Ref: {s}{s}\n", .{ self.ref1, self.ref2 });
+        for (self.complementos.items) |complemento| {
+            complemento.print();
+        }
         pr("\n", .{});
     }
 
-    pub fn printOneLine(self: *const Movimiento) void {
+    pub fn printOneLine(self: *const Self) void {
         var fecha: [10:0]u8 = undefined;
         self.fecha_valor.printTo(&fecha);
         pr("{s}.{s}.{s} {s} {d: >9.2}  {s}{s}\n", .{
@@ -41,9 +48,12 @@ pub const Movimiento = struct {
             self.ref1,
             self.ref2,
         });
+        for (self.complementos.items) |complemento| {
+            complemento.print();
+        }
     }
 
-    pub fn parseMovimiento(self: *Movimiento, line: *const [82]u8) void {
+    pub fn parse(self: *Self, line: *const [82]u8, allocator: std.mem.Allocator) void {
         self.oficina_origen = [4]u8{ line[6], line[7], line[8], line[9] };
         self.fecha_operacion = util.parseFecha(line[10..16]);
         self.fecha_valor = util.parseFecha(line[16..22]);
@@ -56,5 +66,6 @@ pub const Movimiento = struct {
         std.mem.copy(u8, &self.dni, line[42..52]);
         std.mem.copy(u8, &self.ref1, line[52..64]);
         std.mem.copy(u8, &self.ref2, line[64..80]);
+        self.complementos = std.ArrayList(Complemento).init(allocator);
     }
 };

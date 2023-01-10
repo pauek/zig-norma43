@@ -1,5 +1,6 @@
 const std = @import("std");
 const util = @import("./util.zig");
+const sqlite = @import("sqlite");
 const ExtractoBancario = @import("./extracto.zig").ExtractoBancario;
 
 pub fn main() anyerror!void {

@@ -14,6 +14,15 @@ pub fn build(b: *std.build.Builder) void {
     const exe = b.addExecutable("norma43", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
+
+    const sqlite = b.addStaticLibrary("sqlite", null);
+    sqlite.addCSourceFile("third_party/zig-sqlite/c/sqlite3.c", &[_][]const u8{"-std=c99"});
+    sqlite.linkLibC();
+
+    exe.linkLibrary(sqlite);
+    exe.addPackagePath("sqlite", "third_party/zig-sqlite/sqlite.zig");
+    exe.addIncludePath("third_party/zig-sqlite/c");
+
     exe.install();
 
     const run_cmd = exe.run();
